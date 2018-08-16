@@ -49,13 +49,14 @@ class Linha
 	}
 
 	public function getDadosSegmento($segmentoKey)
-	{
-		$dados = array();
-		$layout = $this->tipo === 'remessa'
-			? $this->layout->getRemessaLayout()
-			: $this->layout->getRetornoLayout();
-		$campos = $layout['detalhes'][$segmentoKey];
-		if($campos) {
+    {
+        $dados = array();
+        $layout = $this->tipo === 'remessa'
+            ? $this->layout->getRemessaLayout()
+            : $this->layout->getRetornoLayout();
+        if (isset($layout['detalhes'][$segmentoKey])) {
+
+            $campos = $layout['detalhes'][$segmentoKey];
             foreach ($campos as $nome => $definicao) {
                 $dados[$nome] = $this->obterValorCampo($definicao);
             }
