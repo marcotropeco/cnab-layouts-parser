@@ -1,12 +1,12 @@
 {
-	"name": "glauberportella/cnab-layouts-parser",
+    "name": "marcotropeco/cnab-layouts-parser",
     "description": "Parser de arquivos de configuração CNAB gerados no projeto https://github.com/glauberportella/cnab-layouts",
     "type": "project",
     "license": "MIT",
     "authors": [
         {
-            "name": "Glauber Portella",
-            "email": "glauberportella@gmail.com"
+            "name": "marcotropeco",
+            "email": "marcoaurelio.costa@gmail.com"
         }
     ],
     "require": {
