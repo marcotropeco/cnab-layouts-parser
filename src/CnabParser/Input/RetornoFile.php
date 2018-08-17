@@ -78,7 +78,9 @@ class RetornoFile extends IntercambioBancarioRetornoFileAbstract
 			$this->decodeLotesCnab240();
 		} elseif (strtoupper($tipoLayout) === strtoupper('cnab400')) {
 			$this->decodeLotesCnab400();
-		}
+		} elseif (strtoupper($tipoLayout) === strtoupper('cnab95')) {
+            $this->decodeLotesCnab95();
+        }
 	}
 
 	private function decodeLotesCnab240()
@@ -181,10 +183,10 @@ class RetornoFile extends IntercambioBancarioRetornoFileAbstract
 			$linha = new Linha($linhaStr, $this->layout, 'retorno');
 			$tipoRegistro = (int)$linha->obterValorCampo($defTipoRegistro);
 
-            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_ARQUIVO || $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_LOTE )
+            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_ARQUIVO)
                 continue;
 
-            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_ARQUIVO ||  $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_LOTE ){
+            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_ARQUIVO ){
                 $lote['titulos'][] = $segmentos;
                 $segmentos = array();
                 break;
@@ -213,4 +215,65 @@ class RetornoFile extends IntercambioBancarioRetornoFileAbstract
 
 		$this->model->lotes[] = $lote;
 	}
+
+    private function decodeLotesCnab95()
+    {
+        $defTipoRegistro = array(
+            'pos' => array(1, 1),
+            'picture' => '9(1)',
+        );
+
+        // para Cnab400 codigo do segmento na configuracao yaml é o codigo do registro
+        $defCodigoSegmento = array(
+            'pos' => array(1, 1),
+            'picture' => '9(1)',
+        );
+
+        $defNumeroRegistro = array(
+            'pos' => array(395, 400),
+            'picture' => '9(6)',
+        );
+
+        $codigoLote = null;
+        $primeiroCodigoSegmentoLayout = $this->layout->getPrimeiroCodigoSegmentoRetorno();
+        $ultimoCodigoSegmentoLayout = $this->layout->getUltimoCodigoSegmentoRetorno();
+
+        $lote = null;
+        $segmentos = array();
+        foreach ($this->linhas as $index => $linhaStr) {
+            $linha = new Linha($linhaStr, $this->layout, 'retorno');
+            $tipoRegistro = (int)$linha->obterValorCampo($defTipoRegistro);
+
+            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_ARQUIVO || $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_LOTE )
+                continue;
+
+            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_ARQUIVO ||  $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_LOTE ){
+                $lote['titulos'][] = $segmentos;
+                $segmentos = array();
+                break;
+            }
+            // estamos tratando detalhes
+            $codigoSegmento = $linha->obterValorCampo($defCodigoSegmento);
+            $numeroRegistro = $linha->obterValorCampo($defNumeroRegistro);
+            $dadosSegmento = $linha->getDadosSegmento('segmento_'.strtolower($codigoSegmento));
+            $segmentos[$codigoSegmento] = $dadosSegmento;
+            $proximaLinha = new Linha($this->linhas[$index + 1], $this->layout, 'retorno');
+            $proximoCodigoSegmento = $proximaLinha->obterValorCampo($defCodigoSegmento);
+            // se (
+            // 	proximo codigoSegmento é o primeiro OU
+            // 	codigoSegmento é ultimo
+            // )
+            // entao fecha o titulo e adiciona em $detalhes
+            if (
+                strtolower($proximoCodigoSegmento) === strtolower($primeiroCodigoSegmentoLayout) ||
+                strtolower($codigoSegmento) === strtolower($ultimoCodigoSegmentoLayout)
+            ) {
+                $lote['titulos'][] = $segmentos;
+                // novo titulo, novos segmentos
+                $segmentos = array();
+            }
+        }
+
+        $this->model->lotes[] = $lote;
+    }
 }
