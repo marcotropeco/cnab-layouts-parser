@@ -152,6 +152,7 @@ class RetornoFile extends IntercambioBancarioRetornoFileAbstract
 		}
 	}
 
+
 	private function decodeLotesCnab400()
 	{
 		$defTipoRegistro = array(
@@ -180,15 +181,14 @@ class RetornoFile extends IntercambioBancarioRetornoFileAbstract
 			$linha = new Linha($linhaStr, $this->layout, 'retorno');
 			$tipoRegistro = (int)$linha->obterValorCampo($defTipoRegistro);
 
-			if ($tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_ARQUIVO)
-				continue;
+            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_ARQUIVO || $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_HEADER_LOTE )
+                continue;
 
-			if ($tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_ARQUIVO) {
-				$lote['titulos'][] = $segmentos;
-				$segmentos = array();
-				break;
-			}
-
+            if ( $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_ARQUIVO ||  $tipoRegistro === IntercambioBancarioRetornoFileAbstract::REGISTRO_TRAILER_LOTE ){
+                $lote['titulos'][] = $segmentos;
+                $segmentos = array();
+                break;
+            }
 			// estamos tratando detalhes
 			$codigoSegmento = $linha->obterValorCampo($defCodigoSegmento);
 			$numeroRegistro = $linha->obterValorCampo($defNumeroRegistro);

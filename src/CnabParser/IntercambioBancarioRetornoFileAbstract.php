@@ -35,6 +35,7 @@ abstract class IntercambioBancarioRetornoFileAbstract extends IntercambioBancari
 	const REGISTRO_TRAILER_LOTE = 5;
 	const REGISTRO_TRAILER_ARQUIVO = 9;
 
+
 	// Para CNAB400
 
 	/**
